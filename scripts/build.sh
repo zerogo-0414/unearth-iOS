@@ -3,6 +3,7 @@
 # Unearth App 打包脚本
 # 版本号固定 1.0.0，构建版本从1开始递增
 # 奇数为测试版(TestFlight)，偶数为正式版(App Store)
+# 格式: iOS-{commit_id_8chars}-{build_number}
 
 set -e
 
@@ -36,6 +37,12 @@ print_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
+# 获取 Git Commit ID (后8位)
+get_commit_id() {
+    cd "$PROJECT_DIR"
+    git rev-parse --short=8 HEAD 2>/dev/null || echo "00000000"
+}
+
 # 获取当前构建版本号
 get_build_number() {
     if [ -f "$BUILD_NUMBER_FILE" ]; then
@@ -53,14 +60,26 @@ increment_build_number() {
     echo "$next"
 }
 
+# 生成构建版本标识
+# 格式: iOS-{commit_id}-{build_number}
+generate_build_identifier() {
+    local build_number=$1
+    local commit_id=$(get_commit_id)
+    echo "iOS-${commit_id}-${build_number}"
+}
+
 # 更新 Xcode 项目版本号
 update_project_version() {
     local build_number=$1
-    print_info "版本号: ${VERSION} | 构建号: ${build_number}"
+    local build_identifier=$(generate_build_identifier "$build_number")
+
+    print_info "版本号: ${VERSION}"
+    print_info "构建号: ${build_identifier}"
+    print_info "Git Commit: $(get_commit_id)"
 
     cd "$PROJECT_DIR"
     xcrun agvtool new-marketing-version "$VERSION"
-    xcrun agvtool new-version -all "$build_number"
+    xcrun agvtool new-version -all "$build_identifier"
 }
 
 # 构建并上传
@@ -68,7 +87,8 @@ build_and_upload() {
     local build_number=$1
     local export_method=$2
     local should_upload=$3
-    local archive_name="${PROJECT_NAME}_v${VERSION}_b${build_number}"
+    local commit_id=$(get_commit_id)
+    local archive_name="${PROJECT_NAME}_iOS-${commit_id}-${build_number}"
 
     print_info "=========================================="
     print_info "构建: ${archive_name}"
@@ -134,10 +154,14 @@ build_and_upload() {
 
 # 主流程
 main() {
+    local commit_id=$(get_commit_id)
+    local current_build=$(get_build_number)
+
     print_info "=========================================="
     print_info "Unearth App 打包"
     print_info "版本: ${VERSION}"
-    print_info "当前构建号: $(get_build_number)"
+    print_info "Git Commit: ${commit_id}"
+    print_info "当前构建号: ${current_build}"
     print_info "=========================================="
 
     echo ""
@@ -181,7 +205,8 @@ main() {
 
     echo ""
     print_success "=========================================="
-    print_success "完成！构建版本: $build_number"
+    print_success "完成！"
+    print_success "构建标识: iOS-${commit_id}-${build_number}"
     print_success "=========================================="
 }
 

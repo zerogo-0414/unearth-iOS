@@ -189,8 +189,39 @@ struct MapView: UIViewRepresentable {
 
         @objc func handleResetMapHeading() {
             guard let mapView = mapView else { return }
-            // 重置地图旋转角度为正北方向
-            mapView.setRotationDegree(0, animated: true, duration: 0.3)
+
+            // 获取当前旋转角度
+            let currentDegree = mapView.rotationDegree
+            print("📍 当前旋转角度: \(currentDegree)°")
+
+            // 将角度标准化到 0-360 范围
+            var normalizedDegree = currentDegree.truncatingRemainder(dividingBy: 360)
+            if normalizedDegree < 0 {
+                normalizedDegree += 360
+            }
+
+            // 计算最短旋转路径
+            // 如果角度 > 180°，顺时针旋转（设为 360°，即等效于 0° 但走短路径）
+            // 如果角度 <= 180°，逆时针旋转（设为 0°）
+            let targetDegree: CGFloat
+            if normalizedDegree > 180 {
+                // 顺时针旋转到 360°（等效于正北）
+                targetDegree = 360
+                print("📍 顺时针旋转 \(360 - normalizedDegree)°")
+            } else {
+                // 逆时针旋转到 0°
+                targetDegree = 0
+                print("📍 逆时针旋转 \(normalizedDegree)°")
+            }
+
+            // 执行旋转动画
+            mapView.setRotationDegree(targetDegree, animated: true, duration: 0.3)
+
+            // 动画完成后重置为 0°（确保角度值正确）
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                mapView.setRotationDegree(0, animated: false, duration: 0)
+            }
+
             // 恢复朝向追踪模式
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 mapView.userTrackingMode = .followWithHeading
