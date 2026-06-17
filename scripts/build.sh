@@ -61,11 +61,11 @@ increment_build_number() {
 }
 
 # 生成构建版本标识
-# 格式: iOS-{commit_id}-{build_number}
+# 格式: iOS-{commit_id}-{version}-{build_number}
 generate_build_identifier() {
     local build_number=$1
     local commit_id=$(get_commit_id)
-    echo "iOS-${commit_id}-${build_number}"
+    echo "iOS-${commit_id}-${VERSION}-${build_number}"
 }
 
 # 更新 Xcode 项目版本号
@@ -206,7 +206,7 @@ main() {
     echo ""
     print_success "=========================================="
     print_success "完成！"
-    print_success "构建标识: iOS-${commit_id}-${build_number}"
+    print_success "构建标识: iOS-${commit_id}-${VERSION}-${build_number}"
     print_success "=========================================="
 }
 
