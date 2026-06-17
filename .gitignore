@@ -1,0 +1,23 @@
+# Xcode
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+DerivedData/
+build/
+*.xcuserstate
+*.xcuserdatad
+
+# CocoaPods
+Pods/
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Build
+*.ipa
+*.xcarchive
+*.dSYM.zip
+
+# User data
+xcuserdata/
