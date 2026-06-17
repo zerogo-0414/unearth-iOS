@@ -36,6 +36,28 @@ API_ISSUER="afc5a658-4baf-42ad-87e9-65c8609a2a2b"
 print_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+
+# 检查是否有未提交的更改
+check_git_status() {
+    cd "$PROJECT_DIR"
+    if [ -n "$(git status --porcelain)" ]; then
+        print_warning "检测到未提交的更改："
+        git status --short
+        echo ""
+        read -p "是否先提交更改？(y/n): " commit_choice
+        if [ "$commit_choice" = "y" ] || [ "$commit_choice" = "Y" ]; then
+            read -p "请输入提交信息: " commit_msg
+            git add -A
+            git commit -m "$commit_msg"
+            print_success "代码已提交"
+        else
+            print_warning "继续打包（未提交的更改不会包含在构建中）"
+        fi
+    else
+        print_success "所有代码已提交"
+    fi
+}
 
 # 获取 Git Commit ID (后8位)
 get_commit_id() {
@@ -163,6 +185,14 @@ main() {
     print_info "Git Commit: ${commit_id}"
     print_info "当前构建号: ${current_build}"
     print_info "=========================================="
+
+    # 检查代码提交状态
+    echo ""
+    print_info "检查代码提交状态..."
+    check_git_status
+
+    # 重新获取 commit id（可能有新提交）
+    commit_id=$(get_commit_id)
 
     echo ""
     echo "  1) 构建测试版 (本地)"
