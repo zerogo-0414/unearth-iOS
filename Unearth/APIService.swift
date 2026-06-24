@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - API 配置
 struct APIConfig {
-    static let baseURL = "http://localhost:8081"
+    static let baseURL = "http://110.40.169.213:8081"
     static var authToken: String? {
         get { UserDefaults.standard.string(forKey: "authToken") }
         set { UserDefaults.standard.set(newValue, forKey: "authToken") }
