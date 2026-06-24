@@ -66,25 +66,9 @@ class TrashBinDataManager {
 
     private init() {}
 
-    // MARK: - 从本地加载
+    // MARK: - 从后端 API 加载（主方法）
 
-    func loadTrashBins() -> [TrashBinData] {
-        var trashBins: [TrashBinData] = []
-
-        if let url = Bundle.main.url(forResource: "trashbins", withExtension: "json"),
-           let data = try? Data(contentsOf: url),
-           let response = try? JSONDecoder().decode(TrashBinResponse.self, from: data) {
-            trashBins = response.data
-        } else {
-            trashBins = defaultTrashBins
-        }
-
-        return trashBins.map { getTrashBinWithMetadata(trashBin: $0) }
-    }
-
-    // MARK: - 从后端 API 加载
-
-    /// 从后端获取附近垃圾箱
+    /// 获取附近垃圾箱（异步）
     func fetchNearbyTrashBins(
         latitude: Double,
         longitude: Double,
@@ -102,8 +86,29 @@ class TrashBinDataManager {
                 }
             case .failure(let error):
                 print("获取附近垃圾箱失败: \(error)")
-                // 降级使用本地数据
-                completion(self.loadTrashBins())
+                completion([])
+            }
+        }
+    }
+
+    /// 获取垃圾箱列表（异步）
+    func fetchTrashBins(
+        page: Int = 1,
+        size: Int = 100,
+        completion: @escaping ([TrashBinData]) -> Void
+    ) {
+        APIService.shared.getTrashBins(page: page, size: size) { result in
+            switch result {
+            case .success(let response):
+                if let pageResult = response.data {
+                    let trashBins = pageResult.records.map { self.convertFromAPI($0) }
+                    completion(trashBins)
+                } else {
+                    completion([])
+                }
+            case .failure(let error):
+                print("获取垃圾箱列表失败: \(error)")
+                completion([])
             }
         }
     }

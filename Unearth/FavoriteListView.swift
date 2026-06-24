@@ -85,12 +85,12 @@ struct FavoriteListView: View {
         isLoading = true
 
         let favoritedIds = TrashBinDataManager.shared.getFavoritedIds()
-        let allBins = TrashBinDataManager.shared.loadTrashBins()
 
-        favoriteBins = allBins.filter { favoritedIds.contains($0.id) }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            isLoading = false
+        TrashBinDataManager.shared.fetchTrashBins { [self] bins in
+            DispatchQueue.main.async {
+                self.favoriteBins = bins.filter { favoritedIds.contains($0.id) }
+                self.isLoading = false
+            }
         }
     }
 

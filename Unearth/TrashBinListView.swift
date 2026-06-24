@@ -196,9 +196,13 @@ struct TrashBinListView: View {
             }
         }
         .onAppear {
-            trashBins = initialTrashBins
-            // 获取最新的用户位置
-            fetchCurrentUserLocation()
+            // 从 API 获取数据
+            TrashBinDataManager.shared.fetchTrashBins { [self] bins in
+                DispatchQueue.main.async {
+                    self.trashBins = bins
+                    self.fetchCurrentUserLocation()
+                }
+            }
         }
         .onChange(of: selectedFilter) { _, _ in
             calculateDistances()
@@ -391,13 +395,15 @@ struct TrashBinListView: View {
                         updaterName: currentUserName,
                         updateContent: "更换垃圾箱图标"
                     )
-                    // 重新加载垃圾箱数据（包含更新后的元数据）
-                    trashBins = TrashBinDataManager.shared.loadTrashBins()
-                    // 刷新列表
-                    calculateDistances()
-                    // 触发地图刷新
-                    refreshTrigger.toggle()
-                    print("✅ 列表上传图标，触发地图刷新")
+                    // 从 API 重新加载数据
+                    TrashBinDataManager.shared.fetchTrashBins { [self] bins in
+                        DispatchQueue.main.async {
+                            self.trashBins = bins
+                            self.calculateDistances()
+                            self.refreshTrigger.toggle()
+                            print("✅ 列表上传图标，触发地图刷新")
+                        }
+                    }
                 }
             }
         }

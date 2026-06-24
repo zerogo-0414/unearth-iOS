@@ -237,8 +237,13 @@ struct MapView: UIViewRepresentable {
         }
 
         func loadAndAddAnnotations() {
-            trashBins = TrashBinDataManager.shared.loadTrashBins()
-            addAnnotationsToMap()
+            // 从 API 获取数据
+            TrashBinDataManager.shared.fetchTrashBins { [weak self] bins in
+                DispatchQueue.main.async {
+                    self?.trashBins = bins
+                    self?.addAnnotationsToMap()
+                }
+            }
         }
 
         // 刷新所有标注（强制重绘）
@@ -249,9 +254,13 @@ struct MapView: UIViewRepresentable {
             let oldAnnotations = mapView.annotations.filter { $0 is TrashBinAnnotation }
             mapView.removeAnnotations(oldAnnotations)
 
-            // 重新加载数据并添加标注
-            trashBins = TrashBinDataManager.shared.loadTrashBins()
-            addAnnotationsToMap()
+            // 从 API 重新获取数据
+            TrashBinDataManager.shared.fetchTrashBins { [weak self] bins in
+                DispatchQueue.main.async {
+                    self?.trashBins = bins
+                    self?.addAnnotationsToMap()
+                }
+            }
         }
 
         func recenterMap() {
@@ -630,9 +639,14 @@ struct MapContainerView: View {
 
                             // 垃圾箱列表按钮
                             Button(action: {
-                                trashBins = TrashBinDataManager.shared.loadTrashBins()
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    showTrashBinList = true
+                                // 从 API 获取数据
+                                TrashBinDataManager.shared.fetchTrashBins { bins in
+                                    DispatchQueue.main.async {
+                                        trashBins = bins
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            showTrashBinList = true
+                                        }
+                                    }
                                 }
                             }) {
                                 Image(systemName: "list.bullet")
